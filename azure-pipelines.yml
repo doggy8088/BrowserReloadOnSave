@@ -1,0 +1,30 @@
+resources:
+  repositories:
+  - repository: self
+    type: git
+    ref: master
+jobs:
+- job: Job_1
+  displayName: Agent job 1
+  pool:
+    vmImage: vs2017-win2016
+  steps:
+  - checkout: self
+  - task: PowerShell@2
+    displayName: nuget restore
+    inputs:
+      targetType: inline
+      script: >+
+        nuget restore -Verbosity quiet
+  - task: CmdLine@2
+    displayName: MSBuild
+    inputs:
+      script: '"C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\msbuild.exe" /p:configuration=Release src\BrowserReloadOnSave.csproj'
+  - task: CopyFiles@2
+    displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
+    inputs:
+      SourceFolder: src\bin\Release\
+      Contents: BrowserReloadOnSave.vsix
+      TargetFolder: $(Build.ArtifactStagingDirectory)
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: drop'
